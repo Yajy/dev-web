@@ -3,6 +3,9 @@ pipeline {
 
     environment {
         SSH_KEY = credentials('my-ssh-key') 
+        
+        AWS_ACCESS_KEY_ID = credentials('aws_access_key_id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws_secret_access_key')
     }
 
     stages {
