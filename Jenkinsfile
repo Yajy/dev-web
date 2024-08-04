@@ -2,11 +2,6 @@ pipeline {
     agent any
 
     environment {
-        
-        TF_VAR_aws_region = 'eu-north-1'  
-        TF_VAR_vpc_cidr = '10.0.0.0/16'   
-        TF_VAR_public_subnet_cidr = '10.0.1.0/24' 
-        TF_VAR_private_subnet_cidr = '10.0.2.0/24' 
         SSH_KEY = credentials('my-ssh-key') 
     }
 
@@ -15,8 +10,13 @@ pipeline {
             steps {
                 script {
                     
-                    sh 'terraform init'
-                    sh 'terraform apply -auto-approve'
+                    dir('terraform') {
+                        
+                        sh 'terraform init'
+
+                        
+                        sh 'terraform apply -auto-approve'
+                    }
                 }
             }
         }
@@ -28,11 +28,12 @@ pipeline {
                     def frontendPublicIp = sh(script: 'terraform output -raw frontend_public_ip', returnStdout: true).trim()
                     def backendPrivateIp = sh(script: 'terraform output -raw backend_private_ip', returnStdout: true).trim()
 
+                    
                     sh '''
                         ssh -i "${SSH_KEY}" ec2-user@${frontendPublicIp} "cd /path/to/frontend && ./frontend.sh"
                     '''
 
-                  
+                    
                     sh '''
                         ssh -i "${SSH_KEY}" ec2-user@${backendPrivateIp} "cd /path/to/backend && ./backend.sh"
                     '''
@@ -43,14 +44,14 @@ pipeline {
         stage('Test_Solution') {
             steps {
                 script {
+                  
+                    def frontendPublicIp = sh(script: 'terraform output -raw frontend_public_ip', returnStdout: true).trim()
                     
-                    def frontendPublicDns = sh(script: 'terraform output -raw frontend_public_dns', returnStdout: true).trim()
                     
-                    
-                    echo "Frontend URL: http://${frontendPublicDns}/"
+                    echo "Frontend URL: http://${frontendPublicIp}"
 
-                   
-                    sh "curl -I http://${frontendPublicDns}/"
+                    
+                    sh "curl -I http://${frontendPublicIp}"
                 }
             }
         }
@@ -58,8 +59,12 @@ pipeline {
 
     post {
         always {
-            
-            sh 'terraform destroy -auto-approve'
+            script {
+                
+                dir('terraform') {
+                    sh 'terraform destroy -auto-approve'
+                }
+            }
         }
     }
 }
