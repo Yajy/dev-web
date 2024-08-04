@@ -1,3 +1,18 @@
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC"
+  default     = "10.0.0.0/16"
+}
+
+variable "public_subnet_cidr" {
+  description = "CIDR block for the public subnet"
+  default     = "10.0.1.0/24"
+}
+
+variable "private_subnet_cidr" {
+  description = "CIDR block for the private subnet"
+  default     = "10.0.2.0/24"
+}
+
 resource "aws_vpc" "my_vpc" {
   cidr_block = var.vpc_cidr
   tags = {
@@ -6,9 +21,9 @@ resource "aws_vpc" "my_vpc" {
 }
 
 resource "aws_subnet" "public" {
-  vpc_id     = aws_vpc.my_vpc.id
-  cidr_block = var.public_subnet_cidr
-  availability_zone = "eu-north-1a" 
+  vpc_id            = aws_vpc.my_vpc.id
+  cidr_block        = var.public_subnet_cidr
+  availability_zone = "eu-north-1a"
 
   tags = {
     Name = "public_subnet"
@@ -16,13 +31,38 @@ resource "aws_subnet" "public" {
 }
 
 resource "aws_subnet" "private" {
-  vpc_id     = aws_vpc.my_vpc.id
-  cidr_block = var.private_subnet_cidr
+  vpc_id            = aws_vpc.my_vpc.id
+  cidr_block        = var.private_subnet_cidr
   availability_zone = "eu-north-1a"
 
   tags = {
     Name = "private_subnet"
   }
+}
+
+resource "aws_internet_gateway" "my_igw" {
+  vpc_id = aws_vpc.my_vpc.id
+  tags = {
+    Name = "my_igw"
+  }
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.my_igw.id
+  }
+
+  tags = {
+    Name = "public_route_table"
+  }
+}
+
+resource "aws_route_table_association" "public" {
+  subnet_id      = aws_subnet.public.id
+  route_table_id = aws_route_table.public.id
 }
 
 resource "aws_instance" "frontend" {
@@ -32,15 +72,21 @@ resource "aws_instance" "frontend" {
   tags = {
     Name = "frontend"
   }
+
+  # Associate a security group
+  vpc_security_group_ids = [aws_security_group.allow_all.id]
 }
 
 resource "aws_instance" "backend" {
-  ami           = "ami-07c8c1b18ca66bb07" 
+  ami           = "ami-07c8c1b18ca66bb07"
   instance_type = "t3.micro"
   subnet_id     = aws_subnet.private.id
   tags = {
     Name = "backend"
   }
+
+  # Associate a security group
+  vpc_security_group_ids = [aws_security_group.allow_all.id]
 }
 
 resource "aws_security_group" "allow_all" {
@@ -60,4 +106,3 @@ resource "aws_security_group" "allow_all" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
