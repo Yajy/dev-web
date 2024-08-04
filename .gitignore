@@ -1,0 +1,10 @@
+
+node_modules/
+
+
+*.log
+*.pid
+*.swp
+
+.env
+
