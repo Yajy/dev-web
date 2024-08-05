@@ -5,9 +5,9 @@ const mysql = require('mysql');
 const app = express();
 const port = 5000;
 
-// Create MySQL connection
+
 const db = mysql.createConnection({
-    host: 'mysql', // Use the service name or IP address of your MySQL container
+    host: 'mysql', 
     user: 'root',
     password: 'password',
     database: 'testdb'
@@ -18,11 +18,11 @@ db.connect(err => {
     console.log('Connected to MySQL');
 });
 
-// Middleware
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Route to handle form submissions
+
 app.post('/submit', (req, res) => {
     const { name, email } = req.body;
 
