@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SSH_KEY = credentials('web-dev-keyPair') 
+        SSH_KEY = credentials('web-dev-keyPair')
         AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
         AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
     }
@@ -29,7 +29,6 @@ pipeline {
                     def frontendPublicIp = sh(script: 'terraform output -raw frontend_public_ip', returnStdout: true).trim()
                     def backendPrivateIp = sh(script: 'terraform output -raw backend_private_ip', returnStdout: true).trim()
 
-                    
                     sh '''
                         ssh -i "${SSH_KEY}" ubuntu@${frontendPublicIp} "cd /path/to/frontend && ./frontend.sh ${backendPrivateIp}"
                     '''
