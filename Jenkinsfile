@@ -56,6 +56,7 @@ pipeline {
     post {
         always {
             node {
+                any
                 dir('terraform') {
                     sh 'terraform destroy -auto-approve'
                 }
