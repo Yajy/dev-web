@@ -56,11 +56,11 @@ pipeline {
 
     post {
         always {
-            script {
+            
                 dir('terraform') {
                     sh 'terraform destroy -auto-approve'
                 }
-            }
+            
         }
     }
 }
