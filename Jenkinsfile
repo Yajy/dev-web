@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
         TERRAFORM_DIR = 'terraform'
-        AWS_CREDENTIALS_ID = 'aws-cred-jai' 
+        AWS_CREDENTIALS_ID = 'aws-credentials' 
         SSH_KEY_PATH = '/home/yajy/web-dev-keyPair.pem'
     }
     stages {
