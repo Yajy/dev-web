@@ -1,23 +1,17 @@
 pipeline {
     agent any
-
     environment {
-        SSH_KEY = credentials('web-dev-keyPair')
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
+        TERRAFORM_DIR = 'terraform'
     }
-
     stages {
         stage('Create_Infra') {
             steps {
-                script {
-                    dir('terraform') {
-                        sh '''
-                            terraform init
-                            terraform apply -auto-approve \
-                            -var "aws_access_key=${AWS_ACCESS_KEY_ID}" \
-                            -var "aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
-                        '''
+                dir(TERRAFORM_DIR) {
+                    script {
+                    
+                        sh 'terraform init'
+                        
+                        sh 'terraform apply -auto-approve'
                     }
                 }
             }
@@ -25,17 +19,26 @@ pipeline {
 
         stage('Deploy_Apps') {
             steps {
+                dir(TERRAFORM_DIR) {
+                    script {
+                   
+                        sh 'terraform apply -auto-approve'
+                    }
+                }
+              
                 script {
-                    def frontendPublicIp = sh(script: 'terraform output -raw frontend_public_ip', returnStdout: true).trim()
-                    def backendPrivateIp = sh(script: 'terraform output -raw backend_private_ip', returnStdout: true).trim()
-
-                    sh '''
-                        ssh -i "${SSH_KEY}" ubuntu@${frontendPublicIp} "cd /path/to/frontend && ./frontend.sh ${backendPrivateIp}"
-                    '''
-
-                    sh '''
-                        ssh -i "${SSH_KEY}" ubuntu@${backendPrivateIp} "cd /path/to/backend && ./backend.sh"
-                    '''
+                    def frontend_ip = sh(script: 'terraform output -raw frontend_public_ip', returnStdout: true).trim()
+                    sh """
+                        ssh -o StrictHostKeyChecking=no -i /path/to/your/key.pem ec2-user@${frontend_ip} 'bash /tmp/frontend.sh'
+                    """
+                }
+                
+              
+                script {
+                    def backend_ip = sh(script: 'terraform output -raw backend_private_ip', returnStdout: true).trim()
+                    sh """
+                        ssh -o StrictHostKeyChecking=no -i /path/to/your/key.pem ec2-user@${backend_ip} 'bash /tmp/backend.sh'
+                    """
                 }
             }
         }
@@ -43,15 +46,18 @@ pipeline {
         stage('Test_Solution') {
             steps {
                 script {
-                    def frontendPublicIp = sh(script: 'terraform output -raw frontend_public_ip', returnStdout: true).trim()
-                    
-                    echo "Frontend URL: http://${frontendPublicIp}"
-                    
-                    sh "curl -I http://${frontendPublicIp}"
+                    def frontend_ip = sh(script: 'terraform output -raw frontend_public_ip', returnStdout: true).trim()
+                    echo "Frontend Public IP: ${frontend_ip}"
+                    sh "curl -I http://${frontend_ip}"
                 }
             }
         }
     }
-
-    
+    post {
+        always {
+            dir(TERRAFORM_DIR) {
+                sh 'terraform destroy -auto-approve'
+            }
+        }
+    }
 }
