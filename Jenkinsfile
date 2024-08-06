@@ -2,20 +2,21 @@ pipeline {
     agent any
     environment {
         TERRAFORM_DIR = 'terraform'
-        AWS_CREDENTIALS_ID = 'aws-credentials' 
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key-id') 
         SSH_KEY_PATH = '/home/yajy/web-dev-keyPair.pem'
     }
     stages {
         stage('Create_Infra') {
             steps {
                 dir(TERRAFORM_DIR) {
-                    withAWS(credentials: "${AWS_CREDENTIALS_ID}", region: 'eu-north-1') {
+                   
                         script {
                    
                             sh 'terraform init'
                             
                             sh 'terraform apply -auto-approve'
-                        }
+                        
                     }
                 }
             }
@@ -24,11 +25,11 @@ pipeline {
         stage('Deploy_Apps') {
             steps {
                 dir(TERRAFORM_DIR) {
-                    withAWS(credentials: "${AWS_CREDENTIALS_ID}", region: 'eu-north-1') {
+                    
                         script {
                             sh 'terraform apply -auto-approve'
                         }
-                    }
+                    
                 }
                 
                 script {
@@ -62,9 +63,9 @@ pipeline {
     post {
         always {
             dir(TERRAFORM_DIR) {
-                withAWS(credentials: "${AWS_CREDENTIALS_ID}", region: 'eu-north-1') {
+                
                     sh 'terraform destroy -auto-approve'
-                }
+                
             }
         }
     }
