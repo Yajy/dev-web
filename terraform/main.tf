@@ -163,6 +163,31 @@ resource "aws_security_group" "backend_sg" {
   }
 }
 
+resource "aws_instance" "bastion" {
+  ami           = var.ami_id
+  instance_type = var.instance_type
+  subnet_id     = aws_subnet.public.id
+  key_name      = var.key_name
+  tags = {
+    Name = "bastion"
+  }
+
+  vpc_security_group_ids = [aws_security_group.frontend_sg.id]
+
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'Bastion host is up'"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
+      host        = self.public_ip
+    }
+  }
+}
+
 resource "aws_instance" "frontend" {
   ami           = var.ami_id
   instance_type = var.instance_type
@@ -220,8 +245,7 @@ resource "aws_instance" "backend" {
       type        = "ssh"
       user        = "ubuntu"
       private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-      host        = aws_instance.backend.private_ip
-      bastion_host = aws_instance.bastion.public_ip
+      host        = aws_instance.bastion.public_ip
     }
   }
 
@@ -235,35 +259,11 @@ resource "aws_instance" "backend" {
       type        = "ssh"
       user        = "ubuntu"
       private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-      host        = aws_instance.backend.private_ip
-      bastion_host = aws_instance.bastion.public_ip
+      host        = aws_instance.bastion.public_ip
     }
   }
-}
 
-resource "aws_instance" "bastion" {
-  ami           = var.ami_id
-  instance_type = var.instance_type
-  subnet_id     = aws_subnet.public.id
-  key_name      = var.key_name
-  tags = {
-    Name = "bastion"
-  }
-
-  vpc_security_group_ids = [aws_security_group.frontend_sg.id]
-
-  provisioner "remote-exec" {
-    inline = [
-      "echo 'Bastion host is up'"
-    ]
-
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-      host        = self.public_ip
-    }
-  }
+  depends_on = [aws_instance.bastion]
 }
 
 output "frontend_public_ip" {
