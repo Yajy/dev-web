@@ -46,11 +46,13 @@ pipeline {
 
         stage('Test_Solution') {
             steps {
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'jai-aws-creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                 script {
                     def frontend_ip = sh(script: 'terraform output -raw frontend_public_ip', returnStdout: true).trim()
                     echo "Frontend Public IP: ${frontend_ip}"
                     sh "curl -I http://${frontend_ip}"
                 }
+            }
             }
         }
     }
