@@ -52,20 +52,4 @@ pipeline {
             }
         }
     }
-    post {
-        success {
-            echo 'Build was successful'
-        }
-        
-        failure {
-            withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'jai-aws-creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                dir(TERRAFORM_DIR) {
-                    sh 'terraform destroy -auto-approve'
-                }
-            }
-        }
-        always {
-            echo 'Build Process is Complete.'
-        }
-    }
 }
