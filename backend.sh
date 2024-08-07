@@ -1,15 +1,17 @@
 #!/bin/bash
 
-apt-get update
-apt-get install -y docker.io
+
+sudo apt-get update
 
 
-systemctl start docker
-systemctl enable docker
+sudo apt-get install -y docker.io
 
+# Start and enable Docker service
+sudo systemctl start docker
+sudo systemctl enable docker
 
-docker pull jai108/dev_project-backend:latest
+# Pull the Docker image
+sudo docker pull jai108/dev_project-backend:latest
 
-
-docker run -d -p 5000:5000 --name backend jai108/dev_project-backend:latest
-
+# Run the Docker container
+sudo docker run -d -p 5000:5000 --name backend jai108/dev_project-backend:latest
