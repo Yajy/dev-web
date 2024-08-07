@@ -130,6 +130,13 @@ resource "aws_security_group" "backend_sg" {
     cidr_blocks = [aws_vpc.my_vpc.cidr_block]
   }
 
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -191,32 +198,60 @@ resource "aws_instance" "backend" {
 
   vpc_security_group_ids = [aws_security_group.backend_sg.id]
 
-  provisioner "file" {
-    source      = "../backend.sh"
-    destination = "/tmp/backend.sh"
+ provisioner "file" {
+  source      = "../backend.sh"
+  destination = "/tmp/backend.sh"
 
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-      host        = self.private_ip
-    }
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
+    host        = aws_instance.bastion.public_ip
+    bastion_host = aws_instance.bastion.public_ip
   }
+}
+
+provisioner "remote-exec" {
+  inline = [
+    "chmod +x /tmp/backend.sh",
+    "sudo /tmp/backend.sh"
+  ]
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
+    host        = aws_instance.backend.private_ip
+    bastion_host = aws_instance.bastion.public_ip
+  }
+}
+}
+
+resource "aws_instance" "bastion" {
+  ami           = var.ami_id
+  instance_type = var.instance_type
+  subnet_id     = aws_subnet.public.id
+  key_name      = var.key_name
+  tags = {
+    Name = "bastion"
+  }
+
+  vpc_security_group_ids = [aws_security_group.frontend_sg.id]
 
   provisioner "remote-exec" {
     inline = [
-      "chmod +x /tmp/backend.sh",
-      "sudo /tmp/backend.sh"
+      "echo 'Bastion host is up'"
     ]
 
     connection {
       type        = "ssh"
       user        = "ubuntu"
       private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-      host        = self.private_ip
+      host        = self.public_ip
     }
   }
 }
+
 
 output "frontend_public_ip" {
   value = aws_instance.frontend.public_ip
