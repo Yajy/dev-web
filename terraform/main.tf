@@ -159,8 +159,8 @@ resource "aws_instance" "frontend" {
 
     connection {
       type        = "ssh"
-      user        = "ubuntu"  # Adjust this based on your AMI's default user
-      private_key = file("/home/yajy/web-dev-keyPair.pem")
+      user        = "ubuntu" 
+      private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
       host        = self.public_ip
     }
   }
@@ -174,7 +174,7 @@ resource "aws_instance" "frontend" {
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = file("/home/yajy/web-dev-keyPair.pem")
+      private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
       host        = self.public_ip
     }
   }
@@ -198,7 +198,7 @@ resource "aws_instance" "backend" {
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = file("/home/yajy/web-dev-keyPair.pem")
+      private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
       host        = self.private_ip
     }
   }
@@ -212,7 +212,7 @@ resource "aws_instance" "backend" {
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = file("/home/yajy/web-dev-keyPair.pem")
+      private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
       host        = self.private_ip
     }
   }
