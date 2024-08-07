@@ -156,6 +156,13 @@ resource "aws_instance" "frontend" {
   provisioner "file" {
     source      = "../frontend.sh"
     destination = "/tmp/frontend.sh"
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"  # Adjust this based on your AMI's default user
+      private_key = file("/home/yajy/web-dev-keyPair.pem")
+      host        = self.public_ip
+    }
   }
 
   provisioner "remote-exec" {
@@ -163,6 +170,13 @@ resource "aws_instance" "frontend" {
       "chmod +x /tmp/frontend.sh",
       "sudo /tmp/frontend.sh"
     ]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("/home/yajy/web-dev-keyPair.pem")
+      host        = self.public_ip
+    }
   }
 }
 
@@ -180,6 +194,13 @@ resource "aws_instance" "backend" {
   provisioner "file" {
     source      = "../backend.sh"
     destination = "/tmp/backend.sh"
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("/home/yajy/web-dev-keyPair.pem")
+      host        = self.private_ip
+    }
   }
 
   provisioner "remote-exec" {
@@ -187,6 +208,13 @@ resource "aws_instance" "backend" {
       "chmod +x /tmp/backend.sh",
       "sudo /tmp/backend.sh"
     ]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("/home/yajy/web-dev-keyPair.pem")
+      host        = self.private_ip
+    }
   }
 }
 
