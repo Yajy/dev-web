@@ -23,10 +23,6 @@ pipeline {
                 withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'jai-aws-creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     dir(TERRAFORM_DIR) {
                         script {
-                            sh 'terraform apply -auto-approve'
-                        }
-
-                        script {
                             def frontend_ip = sh(script: 'terraform output -raw frontend_public_ip', returnStdout: true).trim()
                             sh """
                                 ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'bash /tmp/frontend.sh'
