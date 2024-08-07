@@ -25,14 +25,14 @@ pipeline {
                         script {
                             def frontend_ip = sh(script: 'terraform output -raw frontend_public_ip', returnStdout: true).trim()
                             sh """
-                                ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'bash /tmp/frontend.sh'
+                                ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'sudo bash /tmp/frontend.sh'
                             """
                         }
 
                         script {
                             def backend_ip = sh(script: 'terraform output -raw backend_private_ip', returnStdout: true).trim()
                             sh """
-                                ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${backend_ip} 'bash /tmp/backend.sh'
+                                ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${backend_ip} 'sudo bash /tmp/backend.sh'
                             """
                         }
                     }
