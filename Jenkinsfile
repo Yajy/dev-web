@@ -11,7 +11,7 @@ pipeline {
                     dir(TERRAFORM_DIR) {
                         script {
                             sh 'terraform init'
-                            sh 'terraform apply -auto-approve -var "aws_access_key=$AWS_ACCESS_KEY_ID" -var "aws_secret_key=$AWS_SECRET_ACCESS_KEY"'
+                            sh 'terraform apply -auto-approve'
                         }
                     }
                 }
@@ -23,7 +23,7 @@ pipeline {
                 withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'jai-aws-creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     dir(TERRAFORM_DIR) {
                         script {
-                            sh 'terraform apply -auto-approve -var "aws_access_key=$AWS_ACCESS_KEY_ID" -var "aws_secret_key=$AWS_SECRET_ACCESS_KEY"'
+                            sh 'terraform apply -auto-approve'
                         }
 
                         script {
@@ -47,12 +47,12 @@ pipeline {
         stage('Test_Solution') {
             steps {
                 withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'jai-aws-creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                script {
-                    def frontend_ip = sh(script: 'terraform output -raw frontend_public_ip', returnStdout: true).trim()
-                    echo "Frontend Public IP: ${frontend_ip}"
-                    sh "curl -I http://${frontend_ip}"
+                    script {
+                        def frontend_ip = sh(script: 'terraform output -raw frontend_public_ip', returnStdout: true).trim()
+                        echo "Frontend Public IP: ${frontend_ip}"
+                        sh "curl -I http://${frontend_ip}"
+                    }
                 }
-            }
             }
         }
     }
@@ -60,7 +60,7 @@ pipeline {
         always {
             withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'jai-aws-creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                 dir(TERRAFORM_DIR) {
-                    sh 'terraform destroy -auto-approve -var "aws_access_key=$AWS_ACCESS_KEY_ID" -var "aws_secret_key=$AWS_SECRET_ACCESS_KEY"'
+                    sh 'terraform destroy -auto-approve'
                 }
             }
         }
