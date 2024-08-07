@@ -1,15 +1,15 @@
 #!/bin/bash
 
-apt-get update
-apt-get install -y docker.io
+sudo apt-get update
+sudo apt-get install -y docker.io
 
 
-systemctl start docker
-systemctl enable docker
+sudo systemctl start docker
+sudo systemctl enable docker
 
 
-docker pull nginx:latest
+sudo docker pull nginx:latest
 
 
-docker run -d -p 80:80 --name frontend nginx:latest
+sudo docker run -d -p 80:80 --name frontend_new nginx:latest
 
