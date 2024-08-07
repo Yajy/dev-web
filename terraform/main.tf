@@ -107,6 +107,20 @@ resource "aws_security_group" "frontend_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   egress {
     from_port   = 22
@@ -115,12 +129,6 @@ resource "aws_security_group" "frontend_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
 
   tags = {
     Name = "frontend_sg"
@@ -140,6 +148,12 @@ resource "aws_security_group" "backend_sg" {
   ingress {
     from_port   = 22
     to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -212,33 +226,33 @@ resource "aws_instance" "backend" {
 
   vpc_security_group_ids = [aws_security_group.backend_sg.id]
 
- provisioner "file" {
-  source      = "../backend.sh"
-  destination = "/tmp/backend.sh"
+  provisioner "file" {
+    source      = "../backend.sh"
+    destination = "/tmp/backend.sh"
 
-  connection {
-    type        = "ssh"
-    user        = "ubuntu"
-    private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-    host        = aws_instance.bastion.public_ip
-    bastion_host = aws_instance.bastion.public_ip
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
+      host        = aws_instance.bastion.public_ip
+      bastion_host = aws_instance.bastion.public_ip
+    }
   }
-}
 
-provisioner "remote-exec" {
-  inline = [
-    "chmod +x /tmp/backend.sh",
-    "sudo /tmp/backend.sh"
-  ]
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/backend.sh",
+      "sudo /tmp/backend.sh"
+    ]
 
-  connection {
-    type        = "ssh"
-    user        = "ubuntu"
-    private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-    host        = aws_instance.backend.private_ip
-    bastion_host = aws_instance.bastion.public_ip
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
+      host        = aws_instance.backend.private_ip
+      bastion_host = aws_instance.bastion.public_ip
+    }
   }
-}
 }
 
 resource "aws_instance" "bastion" {
@@ -265,7 +279,6 @@ resource "aws_instance" "bastion" {
     }
   }
 }
-
 
 output "frontend_public_ip" {
   value = aws_instance.frontend.public_ip
