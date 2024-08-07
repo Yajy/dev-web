@@ -91,6 +91,33 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
+resource "aws_eip" "nat" {
+  vpc = true
+}
+
+resource "aws_nat_gateway" "nat" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public.id
+}
+
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat.id
+  }
+
+  tags = {
+    Name = "private_route_table"
+  }
+}
+
+resource "aws_route_table_association" "private" {
+  subnet_id      = aws_subnet.private.id
+  route_table_id = aws_route_table.private.id
+}
+
 resource "aws_security_group" "frontend_sg" {
   vpc_id = aws_vpc.my_vpc.id
 
@@ -107,13 +134,6 @@ resource "aws_security_group" "frontend_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
 
   egress {
     from_port   = 0
@@ -121,14 +141,6 @@ resource "aws_security_group" "frontend_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  egress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
 
   tags = {
     Name = "frontend_sg"
@@ -151,24 +163,11 @@ resource "aws_security_group" "backend_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
 
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -194,7 +193,7 @@ resource "aws_instance" "frontend" {
 
     connection {
       type        = "ssh"
-      user        = "ubuntu" 
+      user        = "ubuntu"
       private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
       host        = self.public_ip
     }
@@ -226,33 +225,33 @@ resource "aws_instance" "backend" {
 
   vpc_security_group_ids = [aws_security_group.backend_sg.id]
 
-  provisioner "file" {
-    source      = "../backend.sh"
-    destination = "/tmp/backend.sh"
+ provisioner "file" {
+  source      = "../backend.sh"
+  destination = "/tmp/backend.sh"
 
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-      host        = aws_instance.bastion.public_ip
-      bastion_host = aws_instance.bastion.public_ip
-    }
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
+    host        = aws_instance.backend.private_ip
+    bastion_host = aws_instance.bastion.public_ip
   }
+}
 
-  provisioner "remote-exec" {
-    inline = [
-      "chmod +x /tmp/backend.sh",
-      "sudo /tmp/backend.sh"
-    ]
+provisioner "remote-exec" {
+  inline = [
+    "chmod +x /tmp/backend.sh",
+    "sudo /tmp/backend.sh"
+  ]
 
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-      host        = aws_instance.backend.private_ip
-      bastion_host = aws_instance.bastion.public_ip
-    }
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
+    host        = aws_instance.backend.private_ip
+    bastion_host = aws_instance.bastion.public_ip
   }
+}
 }
 
 resource "aws_instance" "bastion" {
