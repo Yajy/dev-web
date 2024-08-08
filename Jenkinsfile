@@ -27,9 +27,7 @@ pipeline {
                     def backend_ip = sh(script: 'terraform output -raw backend_private_ip', returnStdout: true).trim()
                     def bastion_ip = sh(script: 'terraform output -raw bastion_public_ip', returnStdout: true).trim()
 
-                    sh """
-                        sed -i "s/BACKEND_IP/${backend_ip}/g" /var/www/html/index.html
-                    """
+                   
 
                     sh """
                         scp -v -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} index.html ubuntu@${frontend_ip}:/tmp/index.html
