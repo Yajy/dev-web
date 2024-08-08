@@ -18,6 +18,12 @@ pipeline {
             }
         }
 
+    stage('Cleanup') {
+        steps {
+            cleanWs()
+        }
+    }    
+
     stage('Deploy_Apps') {
     steps {
         withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'jai-aws-creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
