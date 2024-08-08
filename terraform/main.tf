@@ -18,6 +18,7 @@ variable "private_subnet_cidr" {
   description = "CIDR block for the private subnet"
   type        = string
   default     = "10.0.2.0/24"
+  map_public_ip_on_launch = true
 }
 
 variable "instance_type" {
