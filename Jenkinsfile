@@ -18,27 +18,42 @@ pipeline {
             }
         }
 
-        stage('Deploy_Apps') {
-            steps {
-                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'jai-aws-creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                    dir(TERRAFORM_DIR) {
-                        script {
-                            def frontend_ip = sh(script: 'terraform output -raw frontend_public_ip', returnStdout: true).trim()
-                            sh """
-                                ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'sudo bash /tmp/frontend.sh'
-                            """
-                        }
+    stage('Deploy_Apps') {
+    steps {
+        withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'jai-aws-creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+            dir(TERRAFORM_DIR) {
+                script {
+                 
+                    def frontend_ip = sh(script: 'terraform output -raw frontend_public_ip', returnStdout: true).trim()
+                    
+                    def backend_ip = sh(script: 'terraform output -raw backend_private_ip', returnStdout: true).trim()
 
-                        script {
-                            def backend_ip = sh(script: 'terraform output -raw backend_private_ip', returnStdout: true).trim()
-                            sh """
-                                ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${backend_ip} 'sudo bash /tmp/backend.sh'
-                            """
-                        }
-                    }
+                    def bastion_ip = sh(script: 'terraform output -raw bastion_public_ip', returnStdout: true).trim()
+
+                    sh """
+                        sed -i 's/\\${BACKEND_IP}/${backend_ip}/g' index.html
+                    """
+
+            
+                    sh """
+                        scp -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} index.html ubuntu@${frontend_ip}:/tmp/index.html
+                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'sudo mv /tmp/index.html /usr/share/nginx/html/index.html'
+                    """
+
+                    sh """
+                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'sudo bash /tmp/frontend.sh'
+                    """
+
+                    sh """
+                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ubuntu@${backend_ip} 'sudo bash /tmp/backend.sh'
+                    """
                 }
             }
         }
+    }
+}
+
+
 
         stage('Test_Solution') {
             steps {
