@@ -16,13 +16,7 @@ pipeline {
                     }
                 }
             }
-        }
-
-    stage('Cleanup') {
-        steps {
-            cleanWs()
-        }
-    }    
+        }    
 
     stage('Deploy_Apps') {
     steps {
