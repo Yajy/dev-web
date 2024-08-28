@@ -11,6 +11,6 @@ sudo apt-get install -y docker.io
 sudo systemctl start docker
 sudo systemctl enable docker
 
-sudo docker pull form-front:latest
+sudo docker pull jai108/form-front:latest
 
-sudo docker run -d -p 80:80 --name frontend form-front:latest
+sudo docker run -d -p 80:80 --name frontend jai108/form-front:latest
