@@ -41,13 +41,18 @@ pipeline {
                     """
 
                     sh """
-                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ubuntu@${backend_ip} 'sudo bash /tmp/backend.sh'
+                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ubuntu@${backend_ip} 'hostname'
+                    """
+                    // added -vvv to check logs for tunning not happening
+                    sh """
+                        ssh -vvv -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ubuntu@${backend_ip} 'sudo bash /tmp/backend.sh'
                     """
                 }
             }
         }
     }
 }
+
 
 
 
