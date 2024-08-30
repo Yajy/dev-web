@@ -18,6 +18,15 @@ pipeline {
             }
         }    
 
+    stage('Verify Files') {
+        steps {
+            dir('dev-web') {
+                sh 'ls -l ./frontend/index.html'
+                sh 'ls -l ./backend.sh'
+            }    
+        }
+    }
+        
     stage('Deploy_Apps') {
     steps {
         withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'jai-aws-creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
