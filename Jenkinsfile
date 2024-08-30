@@ -21,7 +21,7 @@ pipeline {
     stage('Verify Files') {
         steps {
             dir('dev-web') {
-                sh 'ls -l ./frontend/index.html'
+                sh 'ls -l'
                 sh 'ls -l ./backend.sh'
             }    
         }
