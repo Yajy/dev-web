@@ -21,7 +21,7 @@ pipeline {
     stage('Verify Files') {
         steps {
             dir('dev-web') {
-                sh 'ls -l'
+                sh 'pwd'
                 sh 'ls -l ./backend.sh'
             }    
         }
