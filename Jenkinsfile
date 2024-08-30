@@ -22,6 +22,12 @@ pipeline {
         steps {
                 sh 'pwd'
                 sh 'ls -l ./backend.sh'
+                
+        }
+    }
+    stage('Destroy infra') {
+        steps {
+                sh 'terraform destroy -auto-approve'
         }
     }
         
