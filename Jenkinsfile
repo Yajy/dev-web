@@ -42,7 +42,7 @@ pipeline {
                     
                     
                     sh """
-                        chmod 600 ${SSH_KEY_PATH}
+                        chmod 700 ${SSH_KEY_PATH}
                         scp -v -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ./frontend/index.html ubuntu@${frontend_ip}:/tmp/index.html
                         ssh -v -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'sudo mv /tmp/index.html /usr/share/nginx/html/index.html'
                     """
