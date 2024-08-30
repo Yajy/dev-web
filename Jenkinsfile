@@ -40,7 +40,7 @@ pipeline {
                         bastion_ip = sh(script: 'terraform output -raw bastion_public_ip', returnStdout: true).trim()
                     }
                     
-                    dir('dev-web') {
+                    
                     sh """
                         chmod 600 ${SSH_KEY_PATH}
                         scp -v -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ./frontend/index.html ubuntu@${frontend_ip}:/tmp/index.html
@@ -63,7 +63,7 @@ pipeline {
                         ssh -vvv -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ubuntu@${backend_ip} 'sudo /tmp/backend.sh'
                     """
                 
-                    }
+                    
                 }
         }
     }
