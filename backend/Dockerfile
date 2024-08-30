@@ -1,4 +1,3 @@
-# Dockerfile for backend
 FROM node:14
 WORKDIR ./
 COPY app.js ./
