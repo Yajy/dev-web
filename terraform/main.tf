@@ -186,7 +186,7 @@ resource "aws_security_group" "backend_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] // just for time being allowing ssh from anywhere. better - security_groups = [aws_security_group.bastion_sg.id]
   }
 
   egress {
@@ -214,7 +214,8 @@ resource "aws_instance" "bastion" {
 
   provisioner "remote-exec" {
     inline = [
-      "echo 'Bastion host is up'"
+      "echo 'AllowTcpForwarding yes' | sudo tee -a /etc/ssh/sshd_config",
+      "sudo systemctl restart sshd"
     ]
 
     connection {
@@ -283,7 +284,10 @@ resource "aws_instance" "backend" {
       type        = "ssh"
       user        = "ubuntu"
       private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-      host        = aws_instance.bastion.public_ip
+      host                = self.private_ip
+      bastion_host        = aws_instance.bastion.public_ip
+      bastion_user        = "ubuntu"
+      bastion_private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
     }
   }
 
@@ -297,7 +301,10 @@ resource "aws_instance" "backend" {
       type        = "ssh"
       user        = "ubuntu"
       private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-      host        = aws_instance.bastion.public_ip
+      host                = self.private_ip
+      bastion_host        = aws_instance.bastion.public_ip
+      bastion_user        = "ubuntu"
+      bastion_private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
     }
   }
 
