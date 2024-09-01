@@ -64,8 +64,7 @@ pipeline {
                     // added -vvv to check logs for tunning not happening
                    sh """
                         scp -v -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ./backend.sh ubuntu@${backend_ip}:/tmp/backend.sh
-                        ssh -vvv -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ubuntu@${backend_ip} 'sudo chmod +x /tmp/backend.sh'
-                        ssh -vvv -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ubuntu@${backend_ip} 'sudo /tmp/backend.sh'
+                        ssh -vvv -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ubuntu@${backend_ip} 'sudo chmod +x /tmp/backend.sh && sudo /tmp/backend.sh'
                     """
                 
                     
