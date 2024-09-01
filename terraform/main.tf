@@ -239,32 +239,6 @@ resource "aws_instance" "frontend" {
   }
 
   vpc_security_group_ids = [aws_security_group.frontend_sg.id]
-
-  provisioner "file" {
-    source      = "../frontend.sh"
-    destination = "/tmp/frontend.sh"
-
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-      host        = self.public_ip
-    }
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "chmod +x /tmp/frontend.sh",
-      "sudo /tmp/frontend.sh"
-    ]
-
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-      host        = self.public_ip
-    }
-  }
 }
 
 resource "aws_instance" "backend" {
@@ -277,38 +251,6 @@ resource "aws_instance" "backend" {
   }
 
   vpc_security_group_ids = [aws_security_group.backend_sg.id]
-
-  provisioner "file" {
-    source      = "../backend.sh"
-    destination = "/tmp/backend.sh"
-
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-      host                = self.private_ip
-      bastion_host        = aws_instance.bastion.public_ip
-      bastion_user        = "ubuntu"
-      bastion_private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-    }
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "chmod +x /tmp/backend.sh",
-      "sudo /tmp/backend.sh"
-    ]
-
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-      host                = self.private_ip
-      bastion_host        = aws_instance.bastion.public_ip
-      bastion_user        = "ubuntu"
-      bastion_private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
-    }
-  }
 
   depends_on = [aws_instance.bastion, aws_nat_gateway.nat]
 }
