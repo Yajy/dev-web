@@ -215,8 +215,8 @@ resource "aws_instance" "bastion" {
   provisioner "remote-exec" {
     inline = [
       "echo 'AllowTcpForwarding yes' | sudo tee -a /etc/ssh/sshd_config",
-      "sudo systemctl restart sshd"
-      "ehco 'Commands executed successfully' "
+      "sudo systemctl restart sshd",
+      "echo 'Commands executed successfully' "
     ]
 
     connection {
@@ -225,7 +225,6 @@ resource "aws_instance" "bastion" {
       private_key = file("/var/lib/jenkins/web-dev-keyPair.pem")
       host        = self.public_ip
       timeout = "5m"
-      script_path = "/tmp/terraform_script.sh"
     }
   }
 }
