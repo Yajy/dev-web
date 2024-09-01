@@ -56,6 +56,8 @@ pipeline {
 
                 //backend 
                 sh """
+                    ssh-keyscan -H ${bastion_ip} >> ~/.ssh/known_hosts
+                    ssh-keyscan -H ${backend_ip} >> ~/.ssh/known_hosts
                     scp -v -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ./backend.sh ubuntu@${backend_ip}:/tmp/backend.sh
                     ssh -vvv -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ubuntu@${backend_ip} 'sudo chmod +x /tmp/backend.sh && sudo /tmp/backend.sh'
                 """
