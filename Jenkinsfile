@@ -48,7 +48,7 @@ pipeline {
                     
                     
                     sh """
-                        chmod 400 ${SSH_KEY_PATH}
+                        chmod 600 ${SSH_KEY_PATH}
                         scp -v -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ./frontend/index.html ubuntu@${frontend_ip}:/tmp/index.html
                         ssh -v -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'sudo apt update'
                         ssh -v -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'sudo apt install -y nginx'
