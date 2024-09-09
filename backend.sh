@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Stop and remove existing backend and mysql containers
 if [ "$(sudo docker ps -q -f name=backend)" ]; then
     sudo docker stop backend
     sudo docker rm backend
@@ -11,18 +10,14 @@ if [ "$(sudo docker ps -q -f name=mysql)" ]; then
     sudo docker rm mysql
 fi
 
-# Install Docker if not already installed
 sudo apt-get update
 sudo apt-get install -y docker.io
 
-# Start Docker service
 sudo systemctl start docker
 sudo systemctl enable docker
 
-# Create a Docker network
 sudo docker network create my_network
 
-# Run MySQL container
 sudo docker pull mysql:5.7
 sudo docker run -d \
     --name mysql \
@@ -35,7 +30,15 @@ sudo docker run -d \
 echo "Waiting for MySQL to start..."
 sleep 40
 
-# Run Backend container
+echo "Initializing database..."
+sudo docker exec -i mysql mysql -uroot -ppassword testdb <<EOF
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE
+);
+EOF
+
 sudo docker pull jai108/dev_project-backend:latest
 sudo docker run -d \
     -p 5000:5000 \
