@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS form_data;
+CREATE DATABASE IF NOT EXISTS testdb;
 
 USE testdb;
 
