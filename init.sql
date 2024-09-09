@@ -1,6 +1,6 @@
 CREATE DATABASE IF NOT EXISTS form_data;
 
-USE form_data;
+USE testdb;
 
 CREATE TABLE IF NOT EXISTS frontend_data (
     id INT AUTO_INCREMENT PRIMARY KEY,
