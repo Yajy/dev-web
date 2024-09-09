@@ -23,37 +23,45 @@ pipeline {
     steps {
         withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'jai-aws-creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
             script {
-                def frontend_ip
-                def backend_ip
-                def bastion_ip
-
-                dir(TERRAFORM_DIR) {
-                    frontend_ip = sh(script: 'terraform output -raw frontend_public_ip', returnStdout: true).trim()
-                    backend_ip = sh(script: 'terraform output -raw backend_private_ip', returnStdout: true).trim()
-                    bastion_ip = sh(script: 'terraform output -raw bastion_public_ip', returnStdout: true).trim()
+                try {
+                    def frontend_ip
+                    def backend_ip
+                    def bastion_ip
+                    dir(TERRAFORM_DIR) {
+                        frontend_ip = sh(script: 'terraform output -raw frontend_public_ip', returnStdout: true).trim()
+                        backend_ip = sh(script: 'terraform output -raw backend_private_ip', returnStdout: true).trim()
+                        bastion_ip = sh(script: 'terraform output -raw bastion_public_ip', returnStdout: true).trim()
+                    }
+                    
+                    // Frontend deployment
+                    stage('Deploy Frontend') {
+                        sh """
+                            set -e
+                            ssh -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'sudo apt update && sudo apt install -y nginx'
+                            sed -i "s|http://BACKEND_IP:5000/submit|http://${backend_ip}:5000/submit|g" ./frontend/index.html
+                            scp -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} ./frontend/index.html ubuntu@${frontend_ip}:/tmp/index.html
+                            ssh -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'sudo mv /tmp/index.html /usr/share/nginx/html/index.html'
+                        """
+                    }
+                    
+                    // Backend deployment
+                    stage('Deploy Backend') {
+                        sh """
+                            set -e
+                            ssh-keyscan -H ${bastion_ip} >> ~/.ssh/known_hosts
+                            ssh-keyscan -H ${backend_ip} >> ~/.ssh/known_hosts
+                            scp -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ./backend.sh ubuntu@${backend_ip}:/tmp/backend.sh
+                            ssh -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ubuntu@${backend_ip} 'sudo chmod +x /tmp/backend.sh && sudo /tmp/backend.sh'
+                        """
+                    }
+                } catch (Exception e) {
+                    currentBuild.result = 'FAILURE'
+                    error("Deployment failed: ${e.message}")
                 }
-
-                // frontend
-                sh """
-                    ssh -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'sudo apt update'
-                    ssh -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'sudo apt install -y nginx'
-                    sed -i "s|http://BACKEND_IP:5000/submit|http://${backend_ip}:5000/submit|g" ./frontend/index.html
-                    scp -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} ./frontend/index.html ubuntu@${frontend_ip}:/tmp/index.html
-                    ssh -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'sudo mv /tmp/index.html /usr/share/nginx/html/index.html'
-                """
-
-                //backend 
-                sh """
-                    ssh-keyscan -H ${bastion_ip} >> ~/.ssh/known_hosts
-                    ssh-keyscan -H ${backend_ip} >> ~/.ssh/known_hosts
-                    scp -v -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ./backend.sh ubuntu@${backend_ip}:/tmp/backend.sh
-                    ssh -vvv -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ubuntu@${backend_ip} 'sudo chmod +x /tmp/backend.sh && sudo /tmp/backend.sh'
-                """
             }
         }
     }
 }
-
 
 
 
