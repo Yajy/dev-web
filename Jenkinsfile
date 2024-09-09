@@ -45,15 +45,31 @@ pipeline {
                     }
                     
                     // Backend deployment
-                    stage('Deploy Backend') {
-                        sh """
-                            set -e
-                            ssh-keyscan -H ${bastion_ip} >> ~/.ssh/known_hosts
-                            ssh-keyscan -H ${backend_ip} >> ~/.ssh/known_hosts
-                            scp -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ./backend.sh ubuntu@${backend_ip}:/tmp/backend.sh
-                            ssh -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" ubuntu@${backend_ip} 'sudo chmod +x /tmp/backend.sh && sudo /tmp/backend.sh'
-                        """
-                    }
+stage('Deploy Backend') {
+    steps {
+        script {
+            withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'jai-aws-creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                sh """
+                    set -ex
+                    echo "Adding bastion host to known hosts..."
+                    ssh-keyscan -H ${bastion_ip} >> ~/.ssh/known_hosts
+                    
+                    echo "Checking connectivity to backend from bastion..."
+                    ssh -i ${SSH_KEY_PATH} ubuntu@${bastion_ip} 'ping -c 4 ${backend_ip}'
+                    
+                    echo "Adding backend to known hosts via bastion..."
+                    ssh -i ${SSH_KEY_PATH} ubuntu@${bastion_ip} "ssh-keyscan -H ${backend_ip} >> ~/.ssh/known_hosts"
+                    
+                    echo "Copying backend script..."
+                    scp -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" -i ${SSH_KEY_PATH} ./backend.sh ubuntu@${backend_ip}:/tmp/backend.sh
+                    
+                    echo "Executing backend script..."
+                    ssh -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" -i ${SSH_KEY_PATH} ubuntu@${backend_ip} 'sudo chmod +x /tmp/backend.sh && sudo /tmp/backend.sh'
+                """
+            }
+        }
+    }
+}
                 } catch (Exception e) {
                     currentBuild.result = 'FAILURE'
                     error("Deployment failed: ${e.message}")
