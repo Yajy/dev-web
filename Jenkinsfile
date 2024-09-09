@@ -18,18 +18,6 @@ pipeline {
             }
         }    
 
-    stage('Verify Files') {
-        steps {
-                sh 'pwd'
-                sh 'ls -l ./backend.sh'
-                
-        }
-    }
-    stage('Destroy infra') {
-        steps {
-                sh 'terraform destroy -auto-approve'
-        }
-    }
         
     stage('Deploy_Apps') {
     steps {
