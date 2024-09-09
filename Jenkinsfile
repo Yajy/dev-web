@@ -33,10 +33,12 @@ pipeline {
                             // Frontend deployment
                             sh """
                                 set -e
-                                ssh -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'sudo apt update && sudo apt install -y nginx'
+                                scp -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} ./frontend.sh ubuntu@${frontend_ip}:/home/ubuntu
+                                ssh -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'sudo chmod +x frontend.sh'
+                                
                                 sed -i "s|http://BACKEND_IP:5000/submit|http://${backend_ip}:5000/submit|g" ./frontend/index.html
-                                scp -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} ./frontend/index.html ubuntu@${frontend_ip}:/tmp/index.html
-                                ssh -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} 'sudo mv /tmp/index.html /usr/share/nginx/html/index.html'
+                                scp -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} ./frontend/index.html ubuntu@${frontend_ip}:/home/ubuntu/index.html
+                                ssh -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_PATH} ubuntu@${frontend_ip} './frontend.sh'
                             """
                             
                             // Backend deployment
