@@ -189,6 +189,20 @@ resource "aws_security_group" "backend_sg" {
     cidr_blocks = ["0.0.0.0/0"] // just for time being allowing ssh from anywhere. better - security_groups = [aws_security_group.bastion_sg.id]
   }
 
+ingress {
+    from_port   = 5000
+    to_port     = 5000
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.my_vpc.cidr_block]
+  }
+
+ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.my_vpc.cidr_block]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
