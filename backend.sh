@@ -39,6 +39,9 @@ CREATE TABLE IF NOT EXISTS users (
 );
 EOF
 
+echo "Waiting for table creation..."
+sleep 10
+
 sudo docker pull jai108/dev_project-backend:latest
 sudo docker run -d \
     -p 5000:5000 \
