@@ -18,4 +18,4 @@ mv /home/ubuntu/index.html /var/www/html/
 
 
 sudo docker pull httpd
-sudo docker run -dit --name my-apache-app -p 9090:80 -v "/var/www/html":/usr/local/apache2/htdocs/ httpd:2.4
+sudo docker run -dit --name my-apache-app -p 80:80 -v "/var/www/html":/usr/local/apache2/htdocs/ httpd:2.4
