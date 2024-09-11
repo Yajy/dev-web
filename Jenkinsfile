@@ -50,10 +50,11 @@ pipeline {
                                 set -ex
                                 
                                 echo "Copying backend script..."
-                                scp -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" -i ${SSH_KEY_PATH} ./backend.sh ubuntu@${backend_ip}:/tmp/backend.sh
+                                scp -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -o StrictHostKeyChecking=no -W %h:%p ubuntu@${bastion_ip}" -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ./backend.sh ubuntu@${backend_ip}:/tmp/backend.sh
+
                                 
                                 echo "Executing backend script..."
-                                ssh -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" -i ${SSH_KEY_PATH} ubuntu@${backend_ip} 'sudo chmod +x /tmp/backend.sh && sudo /tmp/backend.sh'
+                                ssh -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -o StrictHostKeyChecking=no -W %h:%p ubuntu@${bastion_ip}" -o StrictHostKeyChecking=no -i ${SSH_KEY_PATH} ubuntu@${backend_ip} 'sudo chmod +x /tmp/backend.sh && sudo /tmp/backend.sh'
                             """
                         } catch (Exception e) {
                             currentBuild.result = 'FAILURE'
