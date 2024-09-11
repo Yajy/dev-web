@@ -48,14 +48,6 @@ pipeline {
                             // Backend deployment
                             sh """
                                 set -ex
-                                echo "Adding bastion host to known hosts..."
-                                ssh-keyscan -H ${bastion_ip} >> ~/.ssh/known_hosts
-                                
-                                echo "Checking connectivity to backend from bastion..."
-                                ssh -i ${SSH_KEY_PATH} ubuntu@${bastion_ip} 'ping -c 4 ${backend_ip}'
-                                
-                                echo "Adding backend to known hosts via bastion..."
-                                ssh -i ${SSH_KEY_PATH} ubuntu@${bastion_ip} "ssh-keyscan -H ${backend_ip} >> ~/.ssh/known_hosts"
                                 
                                 echo "Copying backend script..."
                                 scp -o ProxyCommand="ssh -i ${SSH_KEY_PATH} -W %h:%p ubuntu@${bastion_ip}" -i ${SSH_KEY_PATH} ./backend.sh ubuntu@${backend_ip}:/tmp/backend.sh
